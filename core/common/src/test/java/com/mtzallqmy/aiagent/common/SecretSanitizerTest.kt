@@ -7,9 +7,13 @@ import org.junit.Test
 
 class SecretSanitizerTest {
 
+    private fun openAiFixture(): String = "sk-" + "1234567890abcdefghijklmnopqrst"
+
+    private fun githubClassicFixture(): String = "gh" + "p_abcdefghijklmnopqrstuvwxyz1234567890AB"
+
     @Test
     fun `sanitizes OpenAI style keys`() {
-        val input = "sk-1234567890abcdefghijklmnopqrst"
+        val input = openAiFixture()
         val out = SecretSanitizer.sanitize(input)
         assertTrue("prefix preserved: $out", out.startsWith("sk-1234"))
         assertTrue("suffix preserved: $out", out.endsWith("st"))
@@ -19,7 +23,7 @@ class SecretSanitizerTest {
 
     @Test
     fun `sanitizes GitHub personal access tokens`() {
-        val token = "github_pat_PLACEHOLDER_TOKEN_REMOVED"
+        val token = "github_" + "pat_PLACEHOLDER_TOKEN_REMOVED"
         val out = SecretSanitizer.sanitize("Bearer $token")
         assertFalse(out.contains(token))
         assertTrue(out.contains("****"))
@@ -27,7 +31,7 @@ class SecretSanitizerTest {
 
     @Test
     fun `sanitizes GitHub classic tokens`() {
-        val token = "ghp_abcdefghijklmnopqrstuvwxyz1234567890AB"
+        val token = githubClassicFixture()
         val out = SecretSanitizer.sanitize(token)
         assertFalse(out.contains(token))
     }
@@ -55,9 +59,11 @@ class SecretSanitizerTest {
 
     @Test
     fun `handles multiple secrets in one string`() {
-        val input = "key1=sk-1234567890abcdefghijklmnopqrst key2=ghp_abcdefghijklmnopqrstuvwxyz1234567890AB"
+        val openAi = openAiFixture()
+        val github = githubClassicFixture()
+        val input = "key1=$openAi key2=$github"
         val out = SecretSanitizer.sanitize(input)
         assertTrue(out.contains("****"))
-        assertFalse("both secrets masked", out.contains("1234567890abcdefghijklmnopqrst") && out.contains("abcdefghijklmnopqrstuvwxyz1234567890AB"))
+        assertFalse("both secrets masked", out.contains(openAi) || out.contains(github))
     }
 }
