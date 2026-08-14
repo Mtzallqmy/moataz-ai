@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">إيجيس وكيل ذكي</string>
+    <string name="tab_chat">الوكيل</string>
+    <string name="tab_tools">الأدوات</string>
+    <string name="tab_providers">المزودون</string>
+    <string name="tab_security">الأمان</string>
+    <string name="tab_settings">الإعدادات</string>
+    <string name="tab_logs">السجلات</string>
+    <string name="send">إرسال</string>
+    <string name="stop">إيقاف</string>
+    <string name="ask_agent">اطلب من الوكيل تنفيذ مهمة…</string>
+    <string name="test">اختبار</string>
+    <string name="not_tested">لم يتم الاختبار بعد</string>
+    <string name="connected">متصل</string>
+    <string name="arabic_mode">الوضع العربي</string>
+    <string name="accessibility_service_description">خدمة إيجيس للوصول تتيح للوكيل مراقبة الشاشة والتفاعل معها بموافقتك الصريحة فقط.</string>
+    <string name="provider">المزوّد</string>
+    <string name="model">النموذج</string>
+    <string name="model_not_selected">لم يتم اختيار نموذج</string>
+    <string name="smart_router_active">التوجيه الذكي مفعّل</string>
+    <string name="smart_routing">التوجيه الذكي</string>
+    <string name="api_key">مفتاح API</string>
+    <string name="credential_saved">تم حفظ بيانات الاعتماد بأمان</string>
+    <string name="credential_missing">بيانات الاعتماد غير مهيأة</string>
+    <string name="save">حفظ</string>
+    <string name="remove">إزالة</string>
+    <string name="base_url">عنوان الخادم الأساسي</string>
+    <string name="save_endpoint">حفظ الخادم</string>
+</resources>

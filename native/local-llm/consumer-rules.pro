@@ -1,0 +1,1 @@
+-keep class com.mtzallqmy.aiagent.local_llm.internal.LlamaCppJniBridge { *; }

@@ -1,0 +1,9 @@
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <application>
+        <service
+            android:name=".RustRuntimeService"
+            android:exported="false"
+            android:isolatedProcess="true"
+            android:process=":rust_runtime" />
+    </application>
+</manifest>

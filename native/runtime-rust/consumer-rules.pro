@@ -1,0 +1,2 @@
+-keep class com.mtzallqmy.aiagent.native_runtime.RustRuntimeNative { *; }
+-keep class com.mtzallqmy.aiagent.native_runtime.IRustRuntimeService { *; }

@@ -1,0 +1,1 @@
+-keep class com.mtzallqmy.aiagent.sandbox.termux.TermuxCommandResultReceiver { *; }

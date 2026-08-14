@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Aegis Agent</string>
+    <string name="tab_chat">Agent</string>
+    <string name="tab_tools">Tools</string>
+    <string name="tab_providers">Providers</string>
+    <string name="tab_security">Security</string>
+    <string name="tab_settings">Settings</string>
+    <string name="tab_logs">Logs</string>
+    <string name="send">Send</string>
+    <string name="stop">Stop</string>
+    <string name="ask_agent">Ask the agent a task…</string>
+    <string name="test">Test</string>
+    <string name="not_tested">Not tested yet</string>
+    <string name="connected">Connected</string>
+    <string name="arabic_mode">Arabic (RTL) mode</string>
+    <string name="accessibility_service_description">Aegis Agent accessibility service lets the agent observe and interact with the screen on your explicit approval.</string>
+    <string name="provider">Provider</string>
+    <string name="model">Model</string>
+    <string name="model_not_selected">No model selected</string>
+    <string name="smart_router_active">Smart Router active</string>
+    <string name="smart_routing">Smart routing</string>
+    <string name="api_key">API key</string>
+    <string name="credential_saved">Credential stored securely</string>
+    <string name="credential_missing">Credential not configured</string>
+    <string name="save">Save</string>
+    <string name="remove">Remove</string>
+    <string name="base_url">Base URL</string>
+    <string name="save_endpoint">Save endpoint</string>
+</resources>
