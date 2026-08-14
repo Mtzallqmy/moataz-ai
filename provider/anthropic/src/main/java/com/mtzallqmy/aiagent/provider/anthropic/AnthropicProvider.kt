@@ -230,10 +230,11 @@ class AnthropicProvider(
         sb.append("[")
         chatMessages.forEachIndexed { idx, m ->
             if (idx > 0) sb.append(",")
+            val toolCallId = m.toolCallId
             when {
-                m.role == MessageRole.TOOL && !m.toolCallId.isNullOrBlank() -> {
+                m.role == MessageRole.TOOL && !toolCallId.isNullOrBlank() -> {
                     sb.append("{\"role\":\"user\",\"content\":[{\"type\":\"tool_result\",\"tool_use_id\":")
-                        .append(jsonString(m.toolCallId))
+                        .append(jsonString(toolCallId))
                         .append(",\"content\":").append(jsonString(m.content)).append("}]}")
                 }
                 m.role == MessageRole.ASSISTANT && m.toolCalls.isNotEmpty() -> {
@@ -302,7 +303,7 @@ class AnthropicProvider(
     private fun mapError(e: Throwable): ProviderError = when (e) {
         is ProviderError -> e
         is IOException -> ProviderError.NetworkError(e.message ?: "Network failure")
-                else -> ProviderError.ProviderError_(500, e.message ?: "Anthropic error")
+        else -> ProviderError.ProviderError_(500, e.message ?: "Anthropic error")
     }
 }
 
