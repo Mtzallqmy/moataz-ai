@@ -50,9 +50,6 @@ class GeminiProvider(
                     val outputTokens = m.outputTokenLimit ?: 0
                     val supportsGenContent = m.supportedGenerationMethods?.contains("generateContent") == true
                     val lowerId = id.lowercase()
-                    // The Models endpoint exposes generateContent support but not a reliable
-                    // per-model function-calling flag. Stay conservative for media-only variants
-                    // instead of advertising tool calling that the endpoint can reject at runtime.
                     val mediaOnlyVariant = listOf("image", "tts", "audio", "embedding").any(lowerId::contains)
                     val supportsToolCalling = supportsGenContent && lowerId.startsWith("gemini-") && !mediaOnlyVariant
                     if (!supportsGenContent) null
@@ -208,10 +205,11 @@ class GeminiProvider(
         sb.append("[")
         chatMessages.forEachIndexed { idx, m ->
             if (idx > 0) sb.append(",")
+            val toolName = m.toolName
             when {
-                m.role == MessageRole.TOOL && !m.toolName.isNullOrBlank() -> {
+                m.role == MessageRole.TOOL && !toolName.isNullOrBlank() -> {
                     sb.append("{\"role\":\"user\",\"parts\":[{\"functionResponse\":{\"name\":")
-                        .append(jsonString(m.toolName))
+                        .append(jsonString(toolName))
                         .append(",\"response\":{\"output\":").append(jsonString(m.content)).append("}}}]}")
                 }
                 m.role == MessageRole.ASSISTANT && m.toolCalls.isNotEmpty() -> {
