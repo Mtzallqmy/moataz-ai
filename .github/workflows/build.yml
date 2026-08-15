@@ -159,7 +159,8 @@ jobs:
           profile: pixel_6
           disable-animations: true
           disable-spellchecker: true
-          emulator-options: -no-window -gpu swiftshader_indirect -no-snapshot -noaudio -no-boot-anim -no-metrics
+          emulator-options: -no-window -gpu swiftshader_indirect -no-snapshot -noaudio -no-boot-anim
+          emulator-boot-timeout: 900
           script: |
             set -e
             adb wait-for-device
