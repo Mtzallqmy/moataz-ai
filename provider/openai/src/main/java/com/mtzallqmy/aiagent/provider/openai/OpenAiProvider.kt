@@ -123,7 +123,7 @@ class OpenAiProvider(
                     }
                     try {
                         resp.body?.source()?.let { source ->
-                            while (!source.exhausted() && !call.isCanceled()) {
+                            while (!call.isCanceled()) {
                                 val line = source.readUtf8Line() ?: break
                                 if (!line.startsWith("data:")) continue
                                 val data = line.removePrefix("data:").trim()
