@@ -14,7 +14,10 @@ import kotlin.coroutines.resumeWithException
 
 /** Binder client. The app process never loads the Rust library directly. */
 class RustRuntimeClient(private val context: Context) : AutoCloseable {
-    private val json = Json { ignoreUnknownKeys = false }
+    private val json = Json {
+        encodeDefaults = true
+        ignoreUnknownKeys = false
+    }
     @Volatile private var service: IRustRuntimeService? = null
     @Volatile private var connection: ServiceConnection? = null
 
