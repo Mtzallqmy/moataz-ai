@@ -214,10 +214,11 @@ open class OpenAiCompatibleProvider(
         sb.append("[")
         request.messages.forEachIndexed { idx, m ->
             if (idx > 0) sb.append(",")
+            val toolCallId = m.toolCallId
             when {
-                m.role == MessageRole.TOOL && !m.toolCallId.isNullOrBlank() -> {
+                m.role == MessageRole.TOOL && !toolCallId.isNullOrBlank() -> {
                     sb.append("{\"role\":\"tool\",\"tool_call_id\":")
-                        .append(jsonString(m.toolCallId))
+                        .append(jsonString(toolCallId))
                         .append(",\"content\":").append(jsonString(m.content)).append("}")
                 }
                 m.role == MessageRole.ASSISTANT && m.toolCalls.isNotEmpty() -> {

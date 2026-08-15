@@ -179,10 +179,11 @@ class OpenAiProvider(
         put("messages", buildJsonArray {
             request.messages.forEach { message ->
                 add(buildJsonObject {
+                    val toolCallId = message.toolCallId
                     when {
-                        message.role == MessageRole.TOOL && !message.toolCallId.isNullOrBlank() -> {
+                        message.role == MessageRole.TOOL && !toolCallId.isNullOrBlank() -> {
                             put("role", "tool")
-                            put("tool_call_id", message.toolCallId)
+                            put("tool_call_id", toolCallId)
                             put("content", message.content)
                         }
                         message.role == MessageRole.ASSISTANT && message.toolCalls.isNotEmpty() -> {
