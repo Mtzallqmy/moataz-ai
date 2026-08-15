@@ -56,9 +56,12 @@ class RustRuntimeAndroidTest {
     @Test
     fun invalidExecutableIsRejectedBeforeProcessCreation() {
         val start = client.start(RustExecutionRequest(program = "/system/bin/id"))
-        assertEquals("error", start.status)
+        assertEquals("error", start.status, "Unexpected start response: $start")
         assertNull(start.executionId)
-        assertTrue(start.error.orEmpty().contains("allowlist", ignoreCase = true))
+        assertTrue(
+            "Expected allowlist rejection, got: $start",
+            start.error.orEmpty().contains("allowlist", ignoreCase = true),
+        )
     }
 
     @Test
@@ -70,9 +73,12 @@ class RustRuntimeAndroidTest {
                 environment = mapOf("API_KEY" to "must-not-cross-boundary"),
             ),
         )
-        assertEquals("error", start.status)
+        assertEquals("error", start.status, "Unexpected start response: $start")
         assertNull(start.executionId)
-        assertTrue(start.error.orEmpty().contains("environment", ignoreCase = true))
+        assertTrue(
+            "Expected environment rejection, got: $start",
+            start.error.orEmpty().contains("environment", ignoreCase = true),
+        )
     }
 
     @Test
@@ -202,9 +208,7 @@ class RustRuntimeAndroidTest {
     }
 
     private fun requireExecutionId(start: RustStartResponse): String {
-        if (start.status != "started") {
-            throw AssertionError("Rust runtime start failed: $start")
-        }
+        assertEquals("started", start.status, "Rust runtime start failed: $start")
         assertNotNull(start.executionId)
         return requireNotNull(start.executionId)
     }
