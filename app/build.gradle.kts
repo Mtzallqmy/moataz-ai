@@ -119,6 +119,7 @@ dependencies {
     implementation(libs.compose.material.icons)
     implementation(libs.androidx.navigation.compose)
     implementation(libs.kotlinx.coroutines.android)
+    implementation(libs.squareup.okhttp)
     implementation(libs.kotlinx.serialization.json)
     implementation(libs.androidx.work.runtime.ktx)
 
