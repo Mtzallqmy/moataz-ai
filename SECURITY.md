@@ -27,9 +27,9 @@ Every tool declares a `RiskLevel` (SAFE → SYSTEM_SENSITIVE). `core:tools:Appro
 ## 6. What the app does NOT do
 
 - No network access without an explicit provider configuration by the user.
-- No NDK/JNI/native code — the entire app is pure Kotlin, which reduces the native attack surface to zero.
+- The project includes native Rust/JNI components under `native/runtime-rust` and `native/local-llm`; these components are built only through the canonical CI path and must be covered by native and device testing.
 - No bundled credentials, no tracking SDKs, no crash reporters that upload data.
 
 ## Reporting a vulnerability
 
-If you discover a security issue, open a GitHub issue on https://github.com/Mtzallqmy/Ai marked `security`. Do not include real secrets in any report — sanitize them with the patterns described above.
+If you discover a security issue, open a GitHub issue on https://github.com/Mtzallqmy/moataz-ai marked `security`. Do not include real secrets in any report — sanitize them with the patterns described above.

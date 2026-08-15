@@ -175,6 +175,8 @@ jobs:
     needs: [dependency-security-scan, license-check, rust-runtime, android-quality, android-emulator]
     runs-on: ubuntu-latest
     timeout-minutes: 120
+    permissions:
+      contents: write
     steps:
       - uses: actions/checkout@v4
       - name: Validate Gradle wrapper
@@ -246,3 +248,15 @@ jobs:
           name: signed-release-${{ github.ref_name }}
           path: release-artifacts/
           if-no-files-found: error
+      - name: Publish GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ github.ref_name }}
+          name: Aegis AI Agent ${{ github.ref_name }}
+          generate_release_notes: true
+          draft: false
+          prerelease: false
+          fail_on_unmatched_files: true
+          files: release-artifacts/*
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

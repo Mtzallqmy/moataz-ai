@@ -208,10 +208,11 @@ class GeminiProvider(
         sb.append("[")
         chatMessages.forEachIndexed { idx, m ->
             if (idx > 0) sb.append(",")
+            val toolName = m.toolName
             when {
-                m.role == MessageRole.TOOL && !m.toolName.isNullOrBlank() -> {
+                m.role == MessageRole.TOOL && !toolName.isNullOrBlank() -> {
                     sb.append("{\"role\":\"user\",\"parts\":[{\"functionResponse\":{\"name\":")
-                        .append(jsonString(m.toolName))
+                        .append(jsonString(toolName))
                         .append(",\"response\":{\"output\":").append(jsonString(m.content)).append("}}}]}")
                 }
                 m.role == MessageRole.ASSISTANT && m.toolCalls.isNotEmpty() -> {

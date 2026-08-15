@@ -230,10 +230,11 @@ class AnthropicProvider(
         sb.append("[")
         chatMessages.forEachIndexed { idx, m ->
             if (idx > 0) sb.append(",")
+            val toolCallId = m.toolCallId
             when {
-                m.role == MessageRole.TOOL && !m.toolCallId.isNullOrBlank() -> {
+                m.role == MessageRole.TOOL && !toolCallId.isNullOrBlank() -> {
                     sb.append("{\"role\":\"user\",\"content\":[{\"type\":\"tool_result\",\"tool_use_id\":")
-                        .append(jsonString(m.toolCallId))
+                        .append(jsonString(toolCallId))
                         .append(",\"content\":").append(jsonString(m.content)).append("}]}")
                 }
                 m.role == MessageRole.ASSISTANT && m.toolCalls.isNotEmpty() -> {

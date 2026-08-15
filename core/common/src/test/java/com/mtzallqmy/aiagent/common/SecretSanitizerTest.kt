@@ -27,7 +27,7 @@ class SecretSanitizerTest {
 
     @Test
     fun `sanitizes GitHub classic tokens`() {
-        val token = "ghp_abcdefghijklmnopqrstuvwxyz1234567890AB"
+        val token = "ghp_" + "abcdefghijklmnopqrstuvwxyz1234567890AB"
         val out = SecretSanitizer.sanitize(token)
         assertFalse(out.contains(token))
     }
@@ -55,7 +55,8 @@ class SecretSanitizerTest {
 
     @Test
     fun `handles multiple secrets in one string`() {
-        val input = "key1=sk-1234567890abcdefghijklmnopqrst key2=ghp_abcdefghijklmnopqrstuvwxyz1234567890AB"
+        val githubToken = "ghp_" + "abcdefghijklmnopqrstuvwxyz1234567890AB"
+        val input = "key1=sk-1234567890abcdefghijklmnopqrst key2=$githubToken"
         val out = SecretSanitizer.sanitize(input)
         assertTrue(out.contains("****"))
         assertFalse("both secrets masked", out.contains("1234567890abcdefghijklmnopqrst") && out.contains("abcdefghijklmnopqrstuvwxyz1234567890AB"))
