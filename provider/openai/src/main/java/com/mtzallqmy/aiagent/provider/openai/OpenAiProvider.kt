@@ -4,9 +4,11 @@ import com.mtzallqmy.aiagent.model.*
 import com.mtzallqmy.aiagent.network.SafeHttpClient
 import com.mtzallqmy.aiagent.providers.AiProvider
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.channels.awaitClose
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.callbackFlow
+import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
@@ -16,13 +18,10 @@ import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.buildJsonArray
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
-import okhttp3.Call
-import okhttp3.Callback
 import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import okhttp3.RequestBody.Companion.toRequestBody
-import okhttp3.Response
 import java.io.IOException
 
 /**
@@ -83,11 +82,10 @@ class OpenAiProvider(
         }
     }
 
-    override fun generate(request: GenerationRequest): Flow<GenerationEvent> = callbackFlow {
+    override fun generate(request: GenerationRequest): Flow<GenerationEvent> = flow {
         val key = apiKeyProvider() ?: run {
-            trySend(GenerationEvent.GenerationFailed(ProviderError.AuthenticationError("No API key configured")))
-            close()
-            return@callbackFlow
+            emit(GenerationEvent.GenerationFailed(ProviderError.AuthenticationError("No API key configured")))
+            return@flow
         }
         val payload = buildPayload(request)
         val req = Request.Builder()
@@ -97,82 +95,72 @@ class OpenAiProvider(
             .post(payload.toRequestBody("application/json".toMediaType()))
             .build()
         val call = client.newCall(req)
-        call.enqueue(object : Callback {
-            override fun onFailure(call: Call, error: IOException) {
-                if (!call.isCanceled()) {
-                    trySend(GenerationEvent.GenerationFailed(mapError(error)))
+        val cancellationHandle = currentCoroutineContext()[Job]?.invokeOnCompletion { call.cancel() }
+        try {
+            val response = call.execute()
+            try {
+                if (!response.isSuccessful) {
+                    emit(GenerationEvent.GenerationFailed(mapHttpError(response.code)))
+                    return@flow
                 }
-                close()
-            }
-
-            override fun onResponse(call: Call, response: Response) {
-                response.use { resp ->
-                    if (!resp.isSuccessful) {
-                        trySend(GenerationEvent.GenerationFailed(mapHttpError(resp.code)))
-                        close()
-                        return
+                var terminalSent = false
+                val toolIdsByIndex = mutableMapOf<Int, String>()
+                val startedToolIndices = mutableSetOf<Int>()
+                suspend fun completeOnce() {
+                    if (!terminalSent) {
+                        terminalSent = true
+                        emit(GenerationEvent.GenerationCompleted(""))
                     }
-                    var terminalSent = false
-                    val toolIdsByIndex = mutableMapOf<Int, String>()
-                    val startedToolIndices = mutableSetOf<Int>()
-                    fun completeOnce() {
-                        if (!terminalSent) {
-                            terminalSent = true
-                            trySend(GenerationEvent.GenerationCompleted(""))
+                }
+                response.body?.source()?.let { source ->
+                    while (!call.isCanceled()) {
+                        val line = source.readUtf8Line() ?: break
+                        if (!line.startsWith("data:")) continue
+                        val data = line.removePrefix("data:").trim()
+                        if (data == "[DONE]") {
+                            completeOnce()
+                            break
                         }
-                    }
-                    try {
-                        resp.body?.source()?.let { source ->
-                            while (!call.isCanceled()) {
-                                val line = source.readUtf8Line() ?: break
-                                if (!line.startsWith("data:")) continue
-                                val data = line.removePrefix("data:").trim()
-                                if (data == "[DONE]") {
-                                    completeOnce()
-                                    break
-                                }
-                                val chunk = runCatching { json.decodeFromString<ChatCompletionChunk>(data) }
-                                    .getOrNull() ?: continue
-                                chunk.usage?.let { usage ->
-                                    trySend(GenerationEvent.Usage(usage.promptTokens ?: 0, usage.completionTokens ?: 0))
-                                }
-                                val choice = chunk.choices.firstOrNull() ?: continue
-                                val delta = choice.delta
-                                delta.content?.takeIf { it.isNotEmpty() }?.let {
-                                    trySend(GenerationEvent.TextDelta(it))
-                                }
-                                for (toolCall in delta.toolCalls.orEmpty()) {
-                                    val index = toolCall.index ?: 0
-                                    val functionName = toolCall.function?.name
-                                    val effectiveId = toolCall.id
-                                        ?.takeIf { it.isNotBlank() }
-                                        ?.also { toolIdsByIndex[index] = it }
-                                        ?: toolIdsByIndex[index]
-                                        ?: "openai-tool-$index".also { toolIdsByIndex[index] = it }
-                                    if (index !in startedToolIndices && !functionName.isNullOrBlank()) {
-                                        startedToolIndices += index
-                                        trySend(GenerationEvent.ToolCallStarted(effectiveId, functionName))
-                                    }
-                                    toolCall.function?.arguments?.takeIf { it.isNotEmpty() }?.let { args ->
-                                        trySend(GenerationEvent.ToolCallArgumentsDelta(effectiveId, args))
-                                    }
-                                }
-                                if (choice.finishReason != null) completeOnce()
+                        val chunk = runCatching { json.decodeFromString<ChatCompletionChunk>(data) }
+                            .getOrNull() ?: continue
+                        chunk.usage?.let { usage ->
+                            emit(GenerationEvent.Usage(usage.promptTokens ?: 0, usage.completionTokens ?: 0))
+                        }
+                        val choice = chunk.choices.firstOrNull() ?: continue
+                        val delta = choice.delta
+                        delta.content?.takeIf { it.isNotEmpty() }?.let {
+                            emit(GenerationEvent.TextDelta(it))
+                        }
+                        for (toolCall in delta.toolCalls.orEmpty()) {
+                            val index = toolCall.index ?: 0
+                            val functionName = toolCall.function?.name
+                            val effectiveId = toolCall.id
+                                ?.takeIf { it.isNotBlank() }
+                                ?.also { toolIdsByIndex[index] = it }
+                                ?: toolIdsByIndex[index]
+                                ?: "openai-tool-$index".also { toolIdsByIndex[index] = it }
+                            if (index !in startedToolIndices && !functionName.isNullOrBlank()) {
+                                startedToolIndices += index
+                                emit(GenerationEvent.ToolCallStarted(effectiveId, functionName))
+                            }
+                            toolCall.function?.arguments?.takeIf { it.isNotEmpty() }?.let { args ->
+                                emit(GenerationEvent.ToolCallArgumentsDelta(effectiveId, args))
                             }
                         }
-                        if (!call.isCanceled()) completeOnce()
-                    } catch (error: Exception) {
-                        if (!call.isCanceled()) {
-                            trySend(GenerationEvent.GenerationFailed(mapError(error)))
-                        }
-                    } finally {
-                        close()
+                        if (choice.finishReason != null) completeOnce()
                     }
                 }
+                if (!call.isCanceled()) completeOnce()
+            } finally {
+                response.close()
             }
-        })
-        awaitClose { call.cancel() }
-    }
+        } catch (error: IOException) {
+            if (!call.isCanceled()) emit(GenerationEvent.GenerationFailed(mapError(error)))
+        } finally {
+            cancellationHandle?.dispose()
+            call.cancel()
+        }
+    }.flowOn(Dispatchers.IO)
 
     private fun buildPayload(request: GenerationRequest): String = buildJsonObject {
         put("model", request.modelId.ifEmpty { defaultModel })
