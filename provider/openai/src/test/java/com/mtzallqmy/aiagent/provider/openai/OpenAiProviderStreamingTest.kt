@@ -5,7 +5,7 @@ import com.mtzallqmy.aiagent.model.GenerationEvent
 import com.mtzallqmy.aiagent.model.GenerationRequest
 import com.mtzallqmy.aiagent.model.MessageRole
 import kotlinx.coroutines.flow.toList
-import kotlinx.coroutines.test.runTest
+import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withTimeout
 import okhttp3.OkHttpClient
 import okhttp3.mockwebserver.MockResponse
@@ -31,7 +31,7 @@ class OpenAiProviderStreamingTest {
     }
 
     @Test
-    fun `stream completes and keeps tool id across argument chunks`() = runTest {
+    fun `stream completes and keeps tool id across argument chunks`() = runBlocking {
         server.enqueue(
             MockResponse()
                 .setHeader("Content-Type", "text/event-stream")
