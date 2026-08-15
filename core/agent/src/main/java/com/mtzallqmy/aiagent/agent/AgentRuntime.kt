@@ -144,7 +144,7 @@ class AgentRuntime(
 
             val request = GenerationRequest(
                 messages = contextManager.fit(messages),
-                tools = tools.map { it.descriptor },
+                tools = if (maxToolCallsPerRun > 0) tools.map { it.descriptor } else emptyList(),
                 modelId = modelId,
                 stream = true,
                 routingHint = routingHint,
@@ -233,6 +233,22 @@ class AgentRuntime(
                 appendTimeline(runRecord.runId, "Completed")
                 _state.value = AgentState.COMPLETED
                 _events.emit(GenerationEvent.GenerationCompleted(assistantText))
+                toolRuntime.clearApprovalScope(runRecord.runId)
+                persist(runRecord)
+                return
+            }
+
+            // A zero tool budget is a valid delegated-agent policy: expose no tools
+            // and finish without executing provider-requested tool calls. Providers
+            // must not be able to bypass this policy by emitting tool events anyway.
+            if (maxToolCallsPerRun == 0) {
+                loop = false
+                runRecord.completedAt = System.currentTimeMillis()
+                runRecord.status = "completed"
+                appendTimeline(runRecord.runId, "Tool execution disabled by budget")
+                _state.value = AgentState.COMPLETED
+                val completionText = assistantText.ifBlank { "Tool execution is disabled for this run." }
+                _events.emit(GenerationEvent.GenerationCompleted(completionText))
                 toolRuntime.clearApprovalScope(runRecord.runId)
                 persist(runRecord)
                 return
