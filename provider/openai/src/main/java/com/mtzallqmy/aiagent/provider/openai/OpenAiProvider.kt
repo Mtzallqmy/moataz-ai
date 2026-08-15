@@ -122,6 +122,7 @@ class OpenAiProvider(
                             break
                         }
                         val chunk = runCatching { json.decodeFromString<ChatCompletionChunk>(data) }
+                            .onFailure { error -> println("OPENAI_STREAM_DECODE_ERROR data=$data error=$error") }
                             .getOrNull() ?: continue
                         chunk.usage?.let { usage ->
                             emit(GenerationEvent.Usage(usage.promptTokens ?: 0, usage.completionTokens ?: 0))
