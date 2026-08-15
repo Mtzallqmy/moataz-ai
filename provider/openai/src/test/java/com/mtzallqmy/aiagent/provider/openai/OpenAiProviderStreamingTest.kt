@@ -65,10 +65,10 @@ class OpenAiProviderStreamingTest {
 
         val started = events.filterIsInstance<GenerationEvent.ToolCallStarted>()
         val args = events.filterIsInstance<GenerationEvent.ToolCallArgumentsDelta>()
-        assertEquals(listOf(GenerationEvent.ToolCallStarted("call_1", "echo")), started)
-        assertTrue(args.isNotEmpty())
-        assertTrue(args.all { it.callId == "call_1" })
-        assertEquals("{\"value\":1}", args.joinToString(separator = "") { it.argsFragment })
-        assertEquals(1, events.filterIsInstance<GenerationEvent.GenerationCompleted>().size)
+        assertEquals("events=$events", listOf(GenerationEvent.ToolCallStarted("call_1", "echo")), started)
+        assertTrue("events=$events", args.isNotEmpty())
+        assertTrue("args=$args", args.all { it.callId == "call_1" })
+        assertEquals("args=$args", "{\"value\":1}", args.joinToString(separator = "") { it.argsFragment })
+        assertEquals("events=$events", 1, events.filterIsInstance<GenerationEvent.GenerationCompleted>().size)
     }
 }
