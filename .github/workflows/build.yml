@@ -161,17 +161,7 @@ jobs:
           disable-spellchecker: true
           emulator-options: -no-window -gpu swiftshader_indirect -no-snapshot -noaudio -no-boot-anim
           emulator-boot-timeout: 900
-          script: |
-            set -e
-            adb wait-for-device
-            for attempt in $(seq 1 60); do
-              if adb shell service check package 2>/dev/null | grep -q 'found'; then
-                break
-              fi
-              sleep 2
-            done
-            adb shell service check package | grep -q 'found'
-            ./gradlew --stacktrace connectedDebugAndroidTest
+          script: bash .github/scripts/run-instrumentation.sh
       - name: Upload instrumentation diagnostics
         if: always()
         uses: actions/upload-artifact@v4
