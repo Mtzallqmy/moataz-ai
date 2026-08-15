@@ -202,7 +202,9 @@ class RustRuntimeAndroidTest {
     }
 
     private fun requireExecutionId(start: RustStartResponse): String {
-        assertEquals("started", start.status)
+        if (start.status != "started") {
+            throw AssertionError("Rust runtime start failed: $start")
+        }
         assertNotNull(start.executionId)
         return requireNotNull(start.executionId)
     }
