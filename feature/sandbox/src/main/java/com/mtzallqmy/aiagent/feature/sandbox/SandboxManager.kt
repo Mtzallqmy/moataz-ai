@@ -19,7 +19,12 @@ class SandboxManager(private val context: Context) {
         val uid = context.applicationInfo.uid
         val pkg = context.packageName
         val mode = try {
-            appOps.unsafeCheckOpNoThrow(opField, uid, pkg)
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                appOps.unsafeCheckOpNoThrow(opField, uid, pkg)
+            } else {
+                @Suppress("DEPRECATION")
+                appOps.checkOpNoThrow(opField, uid, pkg)
+            }
         } catch (e: SecurityException) {
             return AppOpState(opField, "unknown_op")
         }
