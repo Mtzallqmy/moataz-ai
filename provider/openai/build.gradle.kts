@@ -23,6 +23,13 @@ android {
     }
 }
 
+tasks.withType<Test>().configureEach {
+    testLogging {
+        showStandardStreams = true
+        exceptionFormat = org.gradle.api.tasks.testing.logging.TestExceptionFormat.FULL
+    }
+}
+
 dependencies {
     testImplementation(libs.junit)
     implementation(libs.kotlinx.coroutines.core)

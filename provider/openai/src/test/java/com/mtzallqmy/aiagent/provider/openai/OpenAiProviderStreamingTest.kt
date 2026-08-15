@@ -63,6 +63,7 @@ class OpenAiProviderStreamingTest {
             ).toList()
         }
 
+        println("OPENAI_STREAM_EVENTS=$events")
         val started = events.filterIsInstance<GenerationEvent.ToolCallStarted>()
         val args = events.filterIsInstance<GenerationEvent.ToolCallArgumentsDelta>()
         assertEquals("events=$events", listOf(GenerationEvent.ToolCallStarted("call_1", "echo")), started)
